@@ -1,0 +1,192 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+generator client {
+  provider = "prisma-client-js"
+}
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+// Enums
+enum Role {
+  USER
+  ADMIN
+  SUPERADMIN
+}
+enum PermohonanStatus {
+  MENUNGGU
+  DITERIMA    // <-- TAMBAHKAN INI
+  DIPROSES
+  SELESAI
+  DITOLAK
+}
+enum KeberatanStatus {
+  DITERIMA
+  DIPROSES
+  DITOLAK
+}
+enum JenisInformasi {
+  BERKALA
+  SERTA_MERTA
+  SETIAP_SAAT
+  DIKECUALIKAN
+}
+enum InformasiStatus {
+  AKTIF
+  NONAKTIF
+}
+enum BeritaStatus {
+  AKTIF
+  NONAKTIF
+}
+// Auth Models
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@unique([provider, providerAccountId])
+}
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+  @@unique([identifier, token])
+}
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  password      String?   // Tambahkan field password
+  role          Role      @default(USER)
+  accounts      Account[]
+  sessions      Session[]
+  permohonans   PermohonanInformasi[]
+  keberatans   Keberatan[]
+  surveis       Survei[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+// PPID Models
+model PermohonanInformasi {
+  id              String            @id @default(cuid())
+  nomorRegistrasi String            @unique
+  nama            String
+  email           String
+  telepon         String
+  alamat          String
+  pekerjaan       String
+  tujuan          String
+  rincianInformasi String
+  caraMemperoleh  String
+  caraPenyampaian String?
+  status          PermohonanStatus  @default(MENUNGGU)
+  catatan         String?
+  userId          String?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  
+  user           User?              @relation(fields: [userId], references: [id])
+  keberatans     Keberatan[]
+  
+  @@index([status])
+  @@index([createdAt])
+}
+model Keberatan {
+  id                    String            @id @default(cuid())
+  nomorRegistrasi       String
+  alasanKeberatan       String
+  rincianKeberatan     String
+  tindakanDiminta       String
+  status                KeberatanStatus   @default(DITERIMA)
+  catatan               String?
+  permohonanInformasiId String
+  userId                String?
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
+  
+  permohonanInformasi PermohonanInformasi @relation(fields: [permohonanInformasiId], references: [id])
+  user                 User?               @relation(fields: [userId], references: [id])
+}
+model Survei {
+  id          String   @id @default(cuid())
+  nama        String
+  email       String
+  telepon     String?
+  alamat      String?
+  pekerjaan   String?
+  kemudahan   Int      // 1-5 rating
+  kecepatan   Int      // 1-5 rating
+  kualitas    Int      // 1-5 rating
+  keramahan   Int      // 1-5 rating
+  saran       String?
+  createdAt   DateTime @default(now())
+  
+  user        User?    @relation(fields: [userId], references: [id])
+  userId      String?
+}
+model InformasiPublik {
+  id          String          @id @default(cuid())
+  judul       String
+  kategori    String
+  deskripsi   String
+  fileUrl     String?
+  fileSize    String?
+  fileType    String?
+  jenis       JenisInformasi  @default(BERKALA)
+  status      InformasiStatus @default(AKTIF)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  
+  @@index([jenis])
+  @@index([status])
+  @@index([kategori])
+}
+model Berita {
+  id          String        @id @default(cuid())
+  judul       String
+  konten      String
+  excerpt     String?
+  imageUrl    String?
+  kategori    String
+  status      BeritaStatus  @default(AKTIF)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  
+  @@index([status])
+  @@index([kategori])
+  @@index([createdAt])
+}
+model Statistik {
+  id                    String   @id @default(cuid())
+  totalInformasi        Int      @default(0)
+  totalPermohonan       Int      @default(0)
+  permohonanSelesai     Int      @default(0)
+  permohonanProses     Int      @default(0)
+  permohonanDitolak    Int      @default(0)
+  totalKeberatan       Int      @default(0)
+  keberatanDiterima    Int      @default(0)
+  keberatanDitolak     Int      @default(0)
+  totalSurvei          Int      @default(0)
+  rataKepuasan         Float    @default(0.0)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+}
