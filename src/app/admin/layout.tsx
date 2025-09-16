@@ -22,7 +22,7 @@ function AdminContent({ children }: { children: ReactNode }) {
   }
 
   if (!session) {
-    router.push('/');
+    router.push('/admin/login');
     return null;
   }
 
