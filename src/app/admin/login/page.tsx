@@ -32,7 +32,7 @@ export default function AdminLoginPage() {
       if (result?.error) {
         setError('Invalid credentials')
       } else {
-        router.push('/admin')
+        router.push('/admin/dashboard')
       }
     } catch (error) {
       setError('Network error. Please try again.')
