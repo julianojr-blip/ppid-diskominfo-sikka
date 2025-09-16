@@ -154,4 +154,8 @@ export default function FAQPage() {
       </main>
     </div>
   )
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> fd94858ef5a9374ffd2e76a50c772b439a5f87cc
