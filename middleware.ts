@@ -2,23 +2,26 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 export function middleware(request: NextRequest) {
-  const isLoggedIn = localStorage.getItem("isLoggedIn");
-  const isLoginPage = request.nextUrl.pathname === "/login";
-  const isDashboardPage = request.nextUrl.pathname.startsWith("/dashboard");
-
-  // Jika belum login dan coba akses dashboard, redirect ke login
-  if (isDashboardPage && !isLoggedIn) {
-    return NextResponse.redirect(new URL("/login", request.url));
+  const { pathname } = request.nextUrl;
+  
+  // Cek login status dari localStorage (client-side)
+  // Note: Middleware runs server-side, so we can't access localStorage directly
+  // This is a simplified version. For production, use cookies or JWT
+  
+  const isAdminRoute = pathname.startsWith("/admin");
+  const isLoginPage = pathname === "/admin/login";
+  
+  // Untuk sekarang, kita allow akses ke login page
+  // Proteksi proper akan di handle di client-side
+  if (isAdminRoute && !isLoginPage) {
+    // Cek cookie atau token di sini untuk production
+    // Untuk development, kita allow dulu
+    return NextResponse.next();
   }
-
-  // Jika sudah login dan coba akses login, redirect ke dashboard
-  if (isLoginPage && isLoggedIn) {
-    return NextResponse.redirect(new URL("/dashboard", request.url));
-  }
-
+  
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ["/login", "/dashboard/:path*"],
+  matcher: ["/admin/:path*"],
 };
